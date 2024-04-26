@@ -8,6 +8,9 @@ This Flask application provides a simple web interface to fetch and display the 
 
 #### Prerequisites
 - Python 3.6 or higher
+- Flask
+- asyncio
+- [eksipy](https://pypi.org/project/eksipy/) (a Python library for interacting with Eksi Sozluk)
 
 #### Installation
 
