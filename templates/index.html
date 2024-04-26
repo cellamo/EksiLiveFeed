@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Eksi Sozluk Feed</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        .dark-mode {
+            background-color: #343a40;
+            color: #fff;
+        }
+        .dark-mode .list-group-item {
+            background-color: #454d55;
+            color: #fff;
+        }
+        .list-group-item {
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+            transition: transform 0.3s ease-in-out;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @media (max-width: 768px) {
+            .input-group, .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+        .btn-primary, .btn-secondary {
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .btn-primary:hover, .btn-secondary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+    </style>
+    <script>
+        var currentEntries = [];
+
+        function fetchEntries() {
+            var topicTitle = $('#topic-title').val();
+            $.post('/get_entries', { topic_title: topicTitle }, function(data) {
+                var entryList = $('#entry-list');
+                var newEntries = data.slice(0, 20);
+                var freshEntries = newEntries.filter(entry => !currentEntries.includes(entry));
+
+                freshEntries.forEach(function(entry) {
+                    var listItem = $('<li class="list-group-item fade-in">' + entry + '</li>');
+                    entryList.prepend(listItem);
+                    setTimeout(() => listItem.removeClass('fade-in'), 500);
+                });
+
+                // Update the current entries list
+                currentEntries = newEntries;
+            });
+        }
+
+        $(document).ready(function() {
+            $('#submit-btn').click(function() {
+                fetchEntries();
+                setInterval(fetchEntries, 3000);
+            });
+
+            $('#dark-mode-btn').click(function() {
+                $('body').toggleClass('dark-mode');
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Eksi Sozluk Feed</h1>
+        <div class="input-group mb-3">
+            <input type="text" id="topic-title" class="form-control" placeholder="Enter topic title">
+            <div class="input-group-append">
+                <button id="submit-btn" class="btn btn-primary mr-2">Submit</button>
+                <button id="dark-mode-btn" class="btn btn-secondary">Toggle Dark Mode</button>
+            </div>
+        </div>
+        <ul id="entry-list" class="list-group"></ul>
+    </div>
+</body>
+</html>
