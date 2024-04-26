@@ -1,4 +1,4 @@
-### README.md for Eksi Sozluk Feed App
+### Eksi Sozluk Live Feed
 
 #### Overview
 This Flask application provides a simple web interface to fetch and display the latest entries from Eksi Sozluk topics. It uses the `eksipy` library to interact with Eksi Sozluk's API and displays entries sorted by date in descending order. The application also features a dark mode toggle for user preference.
