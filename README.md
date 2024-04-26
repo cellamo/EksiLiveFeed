@@ -5,9 +5,6 @@ This Flask application provides a simple web interface to fetch and display the 
 
 #### Prerequisites
 - Python 3.6 or higher
-- Flask
-- asyncio
-- [eksipy](https://pypi.org/project/eksipy/) (a Python library for interacting with Eksi Sozluk)
 
 #### Installation
 
@@ -15,6 +12,7 @@ This Flask application provides a simple web interface to fetch and display the 
    ```bash
    git clone git@github.com:cellamo/EksiLiveFeed.git
    cd EksiLiveFeed
+   ```
 
 2. **Set up a virtual environment (optional but recommended):**
    ```bash
@@ -22,9 +20,9 @@ This Flask application provides a simple web interface to fetch and display the 
    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
    ```
 
-3. **Install dependencies:**
+3. **Install dependencies from `requirements.txt`:**
    ```bash
-   pip install Flask asyncio eksipy
+   pip install -r requirements.txt
    ```
 
 4. **Run the application:**
