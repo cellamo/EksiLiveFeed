@@ -39,7 +39,7 @@ This Flask application provides a simple web interface to fetch and display the 
   Open a web browser and navigate to `http://127.0.0.1:5000/`.
 
 - **Using the interface:**
-  - Enter a topic title in the input field.
+  - Enter a topic title in the input field. (26 nisan 2024 real sociedad real madrid maçı)
   - Click the `Submit` button to fetch the latest entries.
   - Entries will be displayed in a list; newer entries appear at the top.
   - Click the `Toggle Dark Mode` button to switch between light and dark themes.
