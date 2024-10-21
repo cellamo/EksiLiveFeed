@@ -3,7 +3,6 @@ import asyncio
 from eksipy import Eksi
 from typing import List
 from dataclasses import dataclass
-from functools import lru_cache
 import logging
 from waitress import serve  # Import Waitress
 
@@ -60,9 +59,7 @@ class UpdatedEksi(Eksi):
             logger.error(f"An error occurred while fetching gundem: {e}")
             return []
 
-# Caching fetched Gundem topics for 60 seconds
-@lru_cache(maxsize=1)
-def get_cached_gundem(page=1):
+def get_gundem(page=1):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     eksi = UpdatedEksi()
@@ -70,9 +67,7 @@ def get_cached_gundem(page=1):
     loop.close()
     return topics
 
-# Caching fetched entries for each topic_title for 60 seconds
-@lru_cache(maxsize=128)
-def get_cached_entries(topic_title):
+def get_entries(topic_title):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     eksi = Eksi()
@@ -96,26 +91,26 @@ def get_cached_entries(topic_title):
 @app.route('/')
 def index():
     try:
-        gundem_topics = get_cached_gundem()
+        gundem_topics = get_gundem()
         return render_template('index.html', gundem_topics=gundem_topics)
     except Exception as e:
         logger.error(f"Error rendering index page: {e}")
         return render_template('index.html', gundem_topics=[])
 
 @app.route('/get_entries', methods=['GET'])
-def get_entries():
+def get_entries_route():
     topic_title = request.args.get('topic_title')
     if not topic_title:
         logger.warning("No topic_title provided in /get_entries request.")
         return jsonify({"error": "No topic_title provided."}), 400
     
     try:
-        entry_texts = get_cached_entries(topic_title)
+        entry_texts = get_entries(topic_title)
         if entry_texts:
             return jsonify({"entries": entry_texts})
         else:
             return jsonify({"entries": []})
-
+    
     except Exception as e:
         logger.error(f"Error fetching entries for topic '{topic_title}': {e}")
         return jsonify({"error": str(e)}), 500
