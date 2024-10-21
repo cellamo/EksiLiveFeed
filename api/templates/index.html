@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Eksi Sozluk Live Feed</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Include jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        .dark-mode {
+            background-color: #343a40;
+            color: #fff;
+        }
+        .dark-mode .list-group-item {
+            background-color: #454d55;
+            color: #fff;
+        }
+        .list-group-item {
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+            transition: transform 0.3s ease-in-out;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @media (max-width: 768px) {
+            .input-group, .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+            .content {
+                margin-left: 0;
+            }
+        }
+        .btn-primary, .btn-secondary {
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .btn-primary:hover, .btn-secondary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+        .dark-mode .form-control {
+            background-color: #454d55;
+            color: #fff;
+            border-color: #6c757d;
+        }
+        .dark-mode .form-control::placeholder {
+            color: #adb5bd;
+        }
+        .dark-mode .input-group-append .btn {
+            border-color: #6c757d;
+        }
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 250px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            padding-top: 20px;
+            border-right: 1px solid #dee2e6;
+            z-index: 1000;
+        }
+        .sidebar .list-group-item {
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        .sidebar .list-group-item:hover {
+            background-color: #e9ecef;
+        }
+        .content {
+            margin-left: 260px;
+        }
+        .dark-mode .sidebar {
+            background-color: #343a40;
+            color: #fff;
+        }
+        .dark-mode .sidebar .list-group-item {
+            background-color: #454d55;
+            color: #fff;
+        }
+        .dark-mode .sidebar .list-group-item:hover {
+            background-color: #495057;
+        }
+        /* Error Message Styles */
+        .error-message {
+            display: none;
+            margin-bottom: 20px;
+        }
+    </style>
+    <script>
+        var currentEntries = [];
+
+        function fetchEntries(topicTitle) {
+            if (!topicTitle) {
+                topicTitle = $('#topic-title').val();
+            }
+            $.get('/get_entries', { topic_title: topicTitle }, function(data) {
+                if (data.error) {
+                    // Display the error message
+                    $('#error-message').text(data.error).show();
+                    // Optionally, clear existing entries
+                    $('#entry-list').empty();
+                    currentEntries = [];
+                    return;
+                } else {
+                    // Hide the error message if visible
+                    $('#error-message').hide();
+                }
+
+                var entryList = $('#entry-list');
+                var newEntries = data.entries.slice(0, 20);
+                var freshEntries = newEntries.filter(entry => !currentEntries.includes(entry));
+
+                freshEntries.forEach(function(entry) {
+                    var listItem = $('<li class="list-group-item fade-in">' + entry + '</li>');
+                    entryList.prepend(listItem);
+                    setTimeout(() => listItem.removeClass('fade-in'), 500);
+                });
+
+                // Update the current entries list
+                currentEntries = newEntries;
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                // Handle HTTP errors
+                $('#error-message').text('An error occurred: ' + errorThrown).show();
+                $('#entry-list').empty();
+                currentEntries = [];
+            });
+        }
+
+        $(document).ready(function() {
+            $('#submit-btn').click(function() {
+                // Clear any existing intervals to prevent multiple intervals
+                if (window.fetchInterval) {
+                    clearInterval(window.fetchInterval);
+                }
+                fetchEntries();
+                window.fetchInterval = setInterval(fetchEntries, 3000);
+            });
+
+            $('#dark-mode-btn').click(function() {
+                $('body').toggleClass('dark-mode');
+            });
+
+            // Handle click on gundem topics
+            $('.gundem-topic').click(function() {
+                var topicTitle = $(this).text();
+                $('#topic-title').val(topicTitle);
+                $('#entry-list').empty();
+                $('#error-message').hide();
+                currentEntries = [];
+                fetchEntries(topicTitle);
+                // Clear any previous intervals
+                if (window.fetchInterval) {
+                    clearInterval(window.fetchInterval);
+                }
+                // Start fetching new entries
+                window.fetchInterval = setInterval(function() {
+                    fetchEntries(topicTitle);
+                }, 3000);
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="sidebar">
+        <h5 class="text-center">Gündem Başlıkları</h5>
+        <ul class="list-group">
+            {% if gundem_topics %}
+                {% for topic in gundem_topics %}
+                    <li class="list-group-item gundem-topic">{{ topic.title }}</li>
+                {% endfor %}
+            {% else %}
+                <li class="list-group-item">Gündem bulunamadı.</li>
+            {% endif %}
+        </ul>
+    </div>
+    <div class="content">
+        <div class="container mt-5">
+            <h1 class="text-center mb-4">Eksi Sozluk Live Feed</h1>
+            <!-- Error Message Container -->
+            <div id="error-message" class="alert alert-danger error-message" role="alert">
+                <!-- Error messages will appear here -->
+            </div>
+            <div class="input-group mb-3">
+                <input type="text" id="topic-title" class="form-control" placeholder="Enter topic title">
+                <div class="input-group-append">
+                    <button id="submit-btn" class="btn btn-primary mr-2">Submit</button>
+                    <button id="dark-mode-btn" class="btn btn-secondary">Toggle Dark Mode</button>
+                </div>
+            </div>
+            <ul id="entry-list" class="list-group"></ul>
+        </div>
+    </div>
+</body>
+</html>
