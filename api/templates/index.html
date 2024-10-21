@@ -144,8 +144,15 @@
                 // Update the current entries list
                 currentEntries = newEntries;
             }).fail(function(jqXHR, textStatus, errorThrown) {
-                // Handle HTTP errors
-                $('#error-message').text('An error occurred: ' + errorThrown).show();
+                let errorMessage = 'An error occurred.';
+                if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
+                    errorMessage = jqXHR.responseJSON.error;
+                } else if (errorThrown) {
+                    errorMessage = errorThrown;
+                }
+                // Display the error message from the server
+                $('#error-message').text(errorMessage).show();
+                // Optionally, clear existing entries
                 $('#entry-list').empty();
                 currentEntries = [];
             });

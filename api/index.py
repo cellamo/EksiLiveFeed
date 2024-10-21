@@ -2,10 +2,16 @@ from flask import Flask, render_template, request, jsonify
 import asyncio
 from eksipy import Eksi
 from typing import List
+from dataclasses import dataclass
+from functools import lru_cache
+import logging
+from waitress import serve  # Import Waitress
 
 app = Flask(__name__)
 
-from dataclasses import dataclass
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @dataclass
 class Topic:
@@ -24,12 +30,12 @@ class UpdatedEksi(Eksi):
             topics_container = gundem_response.html.find('ul.topic-list.partial', first=True)
             
             if not topics_container:
-                print("Failed to find the topics container with the updated selector.")
+                logger.error("Failed to find the topics container with the updated selector.")
                 return []
             
             topics = topics_container.find("li > a")
             if not topics:
-                print("No topics found with the updated selector.")
+                logger.error("No topics found with the updated selector.")
                 return []
             
             basliklar = []
@@ -47,40 +53,33 @@ class UpdatedEksi(Eksi):
                         
                         basliklar.append(Topic(id=topic_id, title=baslik))
                     except (IndexError, ValueError) as e:
-                        print(f"Error parsing topic: {e}")
+                        logger.warning(f"Error parsing topic: {e}")
                         continue
             return basliklar
         except Exception as e:
-            print(f"An error occurred while fetching gundem: {e}")
+            logger.error(f"An error occurred while fetching gundem: {e}")
             return []
 
-@app.route('/')
-def index():
-    async def fetch_gundem():
-        eksi = UpdatedEksi()
-        topics = await eksi.gundem()
-        return topics
+# Caching fetched Gundem topics for 60 seconds
+@lru_cache(maxsize=1)
+def get_cached_gundem(page=1):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    eksi = UpdatedEksi()
+    topics = loop.run_until_complete(eksi.gundem(page))
+    loop.close()
+    return topics
 
-    # Handle event loop safely
+# Caching fetched entries for each topic_title for 60 seconds
+@lru_cache(maxsize=128)
+def get_cached_entries(topic_title):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    eksi = Eksi()
     try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    
-    gundem_topics = loop.run_until_complete(fetch_gundem())
-
-    return render_template('index.html', gundem_topics=gundem_topics)
-
-
-@app.route('/get_entries', methods=['GET'])
-def get_entries():
-    topic_title = request.args.get('topic_title')
-    async def fetch_entries():
-        eksi = Eksi()
-        topic = await eksi.getTopic(topic_title)
+        topic = loop.run_until_complete(eksi.getTopic(topic_title))
         max_page = topic.max_page
-        entries = await eksi.getEntrys(topic, page=max_page)
+        entries = loop.run_until_complete(eksi.getEntrys(topic, page=max_page))
         
         if entries:
             sorted_entries = sorted(entries, key=lambda entry: entry.date, reverse=True)
@@ -88,21 +87,39 @@ def get_entries():
             return entry_texts
         else:
             return []
-    
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    
-    try:
-        entry_texts = loop.run_until_complete(fetch_entries())
-        return jsonify({"entries": entry_texts})
     except Exception as e:
-        # Log the exception details (optional)
-        print(f"Error fetching entries: {e}")
-        # Return a JSON response with the error message and a 404 status code
-        return jsonify({"error": str(e)}), 404
+        logger.error(f"Error fetching entries for topic '{topic_title}': {e}")
+        raise e  # Re-raise the exception to be handled in the route
+    finally:
+        loop.close()
+
+@app.route('/')
+def index():
+    try:
+        gundem_topics = get_cached_gundem()
+        return render_template('index.html', gundem_topics=gundem_topics)
+    except Exception as e:
+        logger.error(f"Error rendering index page: {e}")
+        return render_template('index.html', gundem_topics=[])
+
+@app.route('/get_entries', methods=['GET'])
+def get_entries():
+    topic_title = request.args.get('topic_title')
+    if not topic_title:
+        logger.warning("No topic_title provided in /get_entries request.")
+        return jsonify({"error": "No topic_title provided."}), 400
+    
+    try:
+        entry_texts = get_cached_entries(topic_title)
+        if entry_texts:
+            return jsonify({"entries": entry_texts})
+        else:
+            return jsonify({"entries": []})
+
+    except Exception as e:
+        logger.error(f"Error fetching entries for topic '{topic_title}': {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Use Waitress to serve the app
+    serve(app, host='0.0.0.0', port=8000)
