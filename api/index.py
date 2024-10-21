@@ -1,6 +1,7 @@
+from datetime import datetime, timezone
 from flask import Flask, render_template, request, jsonify
 import asyncio
-from eksipy import Eksi
+from eksipy import Eksi, Entry, User, Topic
 from typing import List
 from dataclasses import dataclass
 import logging
@@ -11,6 +12,20 @@ app = Flask(__name__)
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def time_ago(date):
+    now = datetime.now(timezone.utc)
+    diff = now - date
+    seconds = diff.total_seconds()
+    
+    if seconds < 60:
+        return f"{int(seconds)} seconds ago"
+    elif seconds < 3600:
+        return f"{int(seconds / 60)} minutes ago"
+    elif seconds < 86400:
+        return f"{int(seconds / 3600)} hours ago"
+    else:
+        return f"{int(seconds / 86400)} days ago"
 
 @dataclass
 class Topic:
@@ -58,6 +73,48 @@ class UpdatedEksi(Eksi):
         except Exception as e:
             logger.error(f"An error occurred while fetching gundem: {e}")
             return []
+        
+    async def getEntrys(self, baslik: Topic, page=1, day=None, sukela=None) -> List[Entry]:
+        url = await baslik.getUrl()
+        url = self.addParamsToUrl(url, {"p": page})
+        if day is not None:
+            url = self.addParamsToUrl(url, {"day": day})
+        if sukela is not None:
+            url = self.addParamsToUrl(url, {"a": sukela})
+
+        topic = await self.session.get(url)
+        topic = topic.html.find("#topic", first=True)
+        entrys = topic.find("#entry-item-list", first=True).find("li")
+        giriler = []
+
+        for entry in entrys:
+            # Ensure you correctly select the date element
+            date_element = entry.find("footer div.info a.entry-date.permalink", first=True)
+            date_str = date_element.text.strip() if date_element else ""
+
+            # Convert the date string if it exists
+            duzenleme, tarih = self.convertToDate(date_str) if date_str else (None, None)
+
+            giriler.append(
+                Entry(
+                    self,
+                    id=entry.attrs['data-id'],
+                    author=User(
+                        self,
+                        id=entry.attrs['data-author-id'], 
+                        nick=entry.attrs['data-author']
+                    ),
+                    entry=entry.pq(".content"),
+                    topic=baslik,
+                    date=tarih,
+                    edited=duzenleme,
+                    fav_count=entry.attrs['data-favorite-count'],
+                    comment=entry.attrs['data-comment-count'],
+                )
+            )
+        
+        return giriler
+
 
 def get_gundem(page=1):
     loop = asyncio.new_event_loop()
@@ -70,21 +127,28 @@ def get_gundem(page=1):
 def get_entries(topic_title):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    eksi = Eksi()
+    eksi = UpdatedEksi()
     try:
         topic = loop.run_until_complete(eksi.getTopic(topic_title))
         max_page = topic.max_page
         entries = loop.run_until_complete(eksi.getEntrys(topic, page=max_page))
         
         if entries:
-            sorted_entries = sorted(entries, key=lambda entry: entry.date, reverse=True)
-            entry_texts = [entry.text() for entry in sorted_entries]
-            return entry_texts
+            sorted_entries = sorted(entries, key=lambda entry: entry.date or 0, reverse=True)
+            entry_data = [
+                {
+                    'text': entry.text(),
+                    'author': entry.author.nick,
+                    'date': time_ago(datetime.fromtimestamp(entry.date, timezone.utc)) if entry.date else 'Unknown'
+                }
+                for entry in sorted_entries
+            ]
+            return entry_data
         else:
             return []
     except Exception as e:
         logger.error(f"Error fetching entries for topic '{topic_title}': {e}")
-        raise e  # Re-raise the exception to be handled in the route
+        raise e
     finally:
         loop.close()
 
@@ -105,9 +169,9 @@ def get_entries_route():
         return jsonify({"error": "No topic_title provided."}), 400
     
     try:
-        entry_texts = get_entries(topic_title)
-        if entry_texts:
-            return jsonify({"entries": entry_texts})
+        entry_data = get_entries(topic_title)
+        if entry_data:
+            return jsonify({"entries": entry_data})
         else:
             return jsonify({"entries": []})
     

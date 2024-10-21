@@ -1,17 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eksi Sozluk Live Feed</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Include jQuery and Bootstrap JS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
+            padding-top: 56px;
         }
+
+        
+    .footer {
+    position: sticky;
+    margin-top: 20px;
+    bottom: 0;
+    width: 100%;
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+    padding: 5px 0; /* Reduced padding */
+    font-size: 0.8rem; /* Smaller font size */
+}
+
+.dark-mode .footer {
+    background-color: #343a40;
+    border-top: 1px solid #454d55;
+    color: #81c14b; /* Change text color for better readability */
+}
+
+.dark-mode .footer a {
+    color: #81c14b; /* Change link color for better readability */
+}
+
+.dark-mode .footer a:hover {
+    color: #6fa641; /* Darker shade on hover */
+}
+
+        .btn-primary {
+        background-color: #81c14b;
+        border-color: #81c14b;
+    }
+    .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+        background-color: #6fa641;
+        border-color: #6fa641;
+    }
+    #dark-mode-toggle, #dark-mode-toggle-mobile {
+        color: #81c14b;
+    }
+    #dark-mode-toggle:hover, #dark-mode-toggle-mobile:hover {
+        color: #6fa641;
+    }
         .dark-mode {
             background-color: #343a40;
             color: #fff;
@@ -29,74 +72,44 @@
             animation: fadeIn 0.5s;
         }
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        @media (max-width: 768px) {
-            .input-group, .btn {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-            .sidebar {
-                width: 100%;
-                position: relative;
-                height: auto;
-            }
-            .content {
-                margin-left: 0;
-            }
-        }
-        .btn-primary, .btn-secondary {
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        .btn-primary:hover, .btn-secondary:hover {
-            background-color: #0056b3;
-            border-color: #004085;
-        }
-        .dark-mode .form-control {
-            background-color: #454d55;
-            color: #fff;
-            border-color: #6c757d;
-        }
-        .dark-mode .form-control::placeholder {
-            color: #adb5bd;
-        }
-        .dark-mode .input-group-append .btn {
-            border-color: #6c757d;
-        }
-        /* Sidebar Styles */
         .sidebar {
+        position: fixed;
+        top: 56px;
+        left: 0;
+        height: calc(100% - 56px);
+        width: 250px;
+        overflow-y: auto;
+        background-color: #f8f9fa;
+        padding-top: 20px;
+        border-right: 1px solid #81c14b;
+        z-index: 1001;
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .sidebar-hidden {
+        transform: translateX(-250px);
+    }
+
+    .navbar {
+        border-bottom: 1px solid #81c14b;
+    }
+    .content {
+        transition: margin-left 0.3s ease-in-out;
+    }
+        .full-width {
+            margin-left: 0;
+        }
+        #sidebar-toggle {
             position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 250px;
-            overflow-y: auto;
-            background-color: #f8f9fa;
-            padding-top: 20px;
-            border-right: 1px solid #dee2e6;
-            z-index: 1000;
-        }
-        .sidebar .list-group-item {
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-        }
-        .sidebar .list-group-item:hover {
-            background-color: #e9ecef;
-        }
-        .content {
-            margin-left: 260px;
+            left: 10px;
+            top: 60px;
+            z-index: 1001;
         }
         .dark-mode .sidebar {
             background-color: #343a40;
-            color: #fff;
         }
         .dark-mode .sidebar .list-group-item {
             background-color: #454d55;
@@ -105,159 +118,79 @@
         .dark-mode .sidebar .list-group-item:hover {
             background-color: #495057;
         }
-        /* Error Message Styles */
         .error-message {
             display: none;
             margin-bottom: 20px;
         }
-        .sidebar {
-            transition: transform 0.3s ease-in-out;
-        }
-        
-        .sidebar-hidden {
-            transform: translateX(-100%);
-        }
-        
-        #sidebar-toggle {
+        #sidebar-overlay {
         position: fixed;
-        left: 10px;
-        top: 10px;
-        z-index: 1001;
-        width: 40px;
-        height: 40px;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
     }
 
+    .sidebar-visible {
+        border-right: 1px solid #81c14b;
+    }
+
+    .dark-mode .form-control {
+        background-color: #454d55;
+        color: #fff;
+        border-color: #6c757d;
+    }
+
+    .dark-mode .form-control:focus {
+        background-color: #495057;
+        color: #fff;
+        border-color: #81c14b;
+        box-shadow: 0 0 0 0.2rem rgba(129, 193, 75, 0.25);
+    }
+
+
     @media (max-width: 768px) {
-        #sidebar-toggle {
-            width: 40px;
-            height: 40px;
-            left: 10px;
-            top: 10px;
+        .sidebar {
+            transform: translateX(-250px);
         }
-    
-        
-        .content {
-            margin-left: 0;
-            transition: none;
-        }
-        
+
         .sidebar-visible {
-            left: 0;
+            transform: translateX(0);
         }
 
-        #submit-btn, #dark-mode-btn {
-            font-size: 0.8rem;
-            padding: 0.25rem 0.5rem;
-        }
-
-        .input-group-append {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-        }
-
-        .input-group-append .btn {
-            flex: 0 0 48%;
-            max-width: 48%;
+        .content {
+            margin-left: 0 !important;
         }
     }
     </style>
-    <script>
-        var currentEntries = [];
-
-        function fetchEntries(topicTitle) {
-            if (!topicTitle) {
-                topicTitle = $('#topic-title').val();
-            }
-            $.get('/get_entries', { topic_title: topicTitle }, function(data) {
-                if (data.error) {
-                    // Display the error message
-                    $('#error-message').text(data.error).show();
-                    // Optionally, clear existing entries
-                    $('#entry-list').empty();
-                    currentEntries = [];
-                    return;
-                } else {
-                    // Hide the error message if visible
-                    $('#error-message').hide();
-                }
-
-                var entryList = $('#entry-list');
-                var newEntries = data.entries.slice(0, 20);
-                var freshEntries = newEntries.filter(entry => !currentEntries.includes(entry));
-
-                freshEntries.forEach(function(entry) {
-                    var listItem = $('<li class="list-group-item fade-in">' + entry + '</li>');
-                    entryList.prepend(listItem);
-                    setTimeout(() => listItem.removeClass('fade-in'), 500);
-                });
-
-                // Update the current entries list
-                currentEntries = newEntries;
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                let errorMessage = 'An error occurred.';
-                if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
-                    errorMessage = jqXHR.responseJSON.error;
-                } else if (errorThrown) {
-                    errorMessage = errorThrown;
-                }
-                // Display the error message from the server
-                $('#error-message').text(errorMessage).show();
-                // Optionally, clear existing entries
-                $('#entry-list').empty();
-                currentEntries = [];
-            });
-        }
-
-        $(document).ready(function() {
-            $('#submit-btn').click(function() {
-                // Clear any existing intervals to prevent multiple intervals
-                if (window.fetchInterval) {
-                    clearInterval(window.fetchInterval);
-                }
-                fetchEntries();
-                window.fetchInterval = setInterval(fetchEntries, 3000);
-            });
-
-            $('#dark-mode-btn').click(function() {
-                $('body').toggleClass('dark-mode');
-            });
-
-            // Handle click on gundem topics
-            $('.gundem-topic').click(function() {
-                var topicTitle = $(this).text();
-                $('#topic-title').val(topicTitle);
-                $('#entry-list').empty();
-                $('#error-message').hide();
-                currentEntries = [];
-                fetchEntries(topicTitle);
-                // Clear any previous intervals
-                if (window.fetchInterval) {
-                    clearInterval(window.fetchInterval);
-                }
-                // Start fetching new entries
-                window.fetchInterval = setInterval(function() {
-                    fetchEntries(topicTitle);
-                }, 3000);
-            });
-
-            $('#sidebar-toggle').click(function() {
-            $('.sidebar').toggleClass('sidebar-hidden');
-            $('.content').toggleClass('full-width');
-        });
-        });
-    </script>
 </head>
 <body>
-    <button id="sidebar-toggle" class="btn btn-primary btn-sm">☰</button>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+        <a class="navbar-brand" href="#">Eksi Sozluk Live Feed</a>
+        <div class="d-flex align-items-center">
+            <a class="nav-link d-lg-none mr-2" href="#" id="dark-mode-toggle-mobile">
+                <i class="fas fa-sun" id="theme-icon-mobile"></i>
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item d-none d-lg-block">
+                    <a class="nav-link" href="#" id="dark-mode-toggle">
+                        <i class="fas fa-sun" id="theme-icon"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div id="sidebar-overlay"></div>
+
     <div class="sidebar">
-        <p>‎ </p>
-        <p></p>
-        <h5 class="text-center">Gündem Başlıkları</h5>
+        <h5 class="text-center">Gündem</h5>
         <ul class="list-group">
             {% if gundem_topics %}
                 {% for topic in gundem_topics %}
@@ -268,28 +201,147 @@
             {% endif %}
         </ul>
     </div>
+    
     <div class="content">
         <div class="container mt-5">
-            <h1 class="text-center mb-4">Eksi Sozluk Live Feed</h1>
-            <!-- Error Message Container -->
-            <div id="error-message" class="alert alert-danger error-message" role="alert">
-                <!-- Error messages will appear here -->
-            </div>
+            <div id="error-message" class="alert alert-danger error-message" role="alert"></div>
             <div class="input-group mb-3">
                 <input type="text" id="topic-title" class="form-control" placeholder="Enter topic title">
                 <div class="input-group-append">
-                    <button id="submit-btn" class="btn btn-primary mr-2">Submit</button>
-                    <button id="dark-mode-btn" class="btn btn-secondary">Toggle Dark Mode</button>
+                    <button id="submit-btn" class="btn btn-primary">Submit</button>
                 </div>
             </div>
             <ul id="entry-list" class="list-group"></ul>
         </div>
-    </div>
-    <div class="container mt-5">
-        <hr>
-        <div class="disclaimer text-muted small">
-            <p>Disclaimer: This application uses the `eksipy` library to retrieve data from Ekşi Sözlük. I do not employ any scraping techniques or have any affiliation with Ekşi Sözlük. This is an independent project created for personal use only. I created this to read entries on topics during Galatasaray matches.</p>
+        <div class="container mt-5">
+            <hr>
+            <div class="disclaimer text-muted small">
+                <p>Disclaimer: This application uses the `eksipy` library to retrieve data from Ekşi Sözlük. I do not employ any scraping techniques or have any affiliation with Ekşi Sözlük. This is an independent project created for personal use only. I created this to read entries on topics during Galatasaray matches.</p>
+            </div>
         </div>
     </div>
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <a href="https://github.com/cellamo/EksiLiveFeed" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-github"></i> cellamo/EksiLiveFeed
+            </a>
+        </div>
+    </footer>
+</body>
+
+    <script>
+        var currentEntries = [];
+
+        function fetchEntries(topicTitle) {
+            if (!topicTitle) {
+                topicTitle = $('#topic-title').val();
+            }
+            $.get('/get_entries', { topic_title: topicTitle }, function(data) {
+                if (data.error) {
+                    $('#error-message').text(data.error).show();
+                    $('#entry-list').empty();
+                    currentEntries = [];
+                    return;
+                } else {
+                    $('#error-message').hide();
+                }
+
+                var entryList = $('#entry-list');
+                var newEntries = data.entries.slice(0, 20);
+                var freshEntries = newEntries.filter(entry => !currentEntries.some(e => e.text === entry.text));
+
+                freshEntries.forEach(function(entry) {
+                var listItem = $('<li class="list-group-item fade-in">' +
+                    '<p>' + entry.text + '</p>' +
+                    '<div class="text-right">' +
+                    '<small class="text-muted">' + entry.author + ' | ' + entry.date + '</small>' +
+                    '</div>' +
+                    '</li>');
+                entryList.append(listItem);
+                setTimeout(() => listItem.removeClass('fade-in'), 500);
+            });
+
+                currentEntries = newEntries;
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                let errorMessage = 'An error occurred.';
+                if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
+                    errorMessage = jqXHR.responseJSON.error;
+                } else if (errorThrown) {
+                    errorMessage = errorThrown;
+                }
+                $('#error-message').text(errorMessage).show();
+                $('#entry-list').empty();
+                currentEntries = [];
+            });
+        }
+
+        $(document).ready(function() {
+            $('#submit-btn').click(function() {
+                if (window.fetchInterval) {
+                    clearInterval(window.fetchInterval);
+                }
+                fetchEntries();
+                window.fetchInterval = setInterval(fetchEntries, 3000);
+            });
+            function toggleDarkMode() {
+            $('body').toggleClass('dark-mode');
+            $('.navbar, .footer').toggleClass('navbar-light bg-light navbar-dark bg-dark');
+            if ($('body').hasClass('dark-mode')) {
+                $('.fa-sun').removeClass('fa-sun').addClass('fa-moon').css('color', '#81c14b');
+            } else {
+                $('.fa-moon').removeClass('fa-moon').addClass('fa-sun').css('color', '#81c14b');
+            }
+        }
+
+        $('#dark-mode-toggle, #dark-mode-toggle-mobile').click(function(e) {
+            e.preventDefault();
+            toggleDarkMode();
+        });
+
+            $('.gundem-topic').click(function() {
+                var topicTitle = $(this).text();
+                $('#topic-title').val(topicTitle);
+                $('#entry-list').empty();
+                $('#error-message').hide();
+                currentEntries = [];
+                fetchEntries(topicTitle);
+                if (window.fetchInterval) {
+                    clearInterval(window.fetchInterval);
+                }
+                window.fetchInterval = setInterval(function() {
+                    fetchEntries(topicTitle);
+                }, 3000);
+            });
+
+            $('.navbar-toggler').click(function() {
+            toggleSidebar();
+        });
+
+        $('#sidebar-overlay').click(function() {
+            toggleSidebar();
+        });
+
+        function toggleSidebar() {
+            $('.sidebar').toggleClass('sidebar-hidden sidebar-visible');
+            if ($('.sidebar').hasClass('sidebar-visible')) {
+                $('#sidebar-overlay').show();
+            } else {
+                $('#sidebar-overlay').hide();
+            }
+        }
+
+        $(window).resize(function() {
+            if ($(window).width() > 768) {
+                $('.sidebar').removeClass('sidebar-hidden sidebar-visible');
+                $('#sidebar-overlay').hide();
+                $('.content').css('margin-left', '250px');
+            } else {
+                $('.sidebar').addClass('sidebar-hidden').removeClass('sidebar-visible');
+                $('#sidebar-overlay').hide();
+                $('.content').css('margin-left', '0');
+            }
+        }).resize(); // Trigger on page load
+    });
+    </script>
 </body>
 </html>
