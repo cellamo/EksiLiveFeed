@@ -1,72 +1,108 @@
-### Eksi Sozluk Live Feed
+# Eksi Sozluk Live Feed App
 
-#### Overview
-This Flask application provides a simple web interface to fetch and display the latest entries from Eksi Sozluk topics. It uses the `eksipy` library to interact with Eksi Sozluk's API and displays entries sorted by date in descending order. The application also features a dark mode toggle for user preference.
+A web application that provides a live feed of entries from **Ekşi Sözlük**, allowing users to view the latest posts on trending topics in real-time.
 
-- **Live Demo:**
-  A live demo of the application is available at [Eksi Live Feed Demo on Heroku](https://eksi-live-feed-cf249b9adec7.herokuapp.com/).
+## Features
 
-#### Prerequisites
-- Python 3.6 or higher
-- Flask
-- asyncio
-- [eksipy](https://pypi.org/project/eksipy/) (a Python library for interacting with Eksi Sozluk)
+- **Live Entry Feed**: Fetches and displays the latest entries for a selected topic from Ekşi Sözlük.
+- **Trending Topics Sidebar**: Displays a list of current trending topics (Gündem Başlıkları) for quick access.
+- **Responsive Design**: Optimized for both desktop and mobile devices.
+- **Dark Mode**: Toggle between light and dark themes for better readability.
 
-#### Installation
+## Prerequisites
+
+- **Python 3.6 or higher**
+- **pip** package manager
+- **Virtual Environment** *(recommended)*
+
+## Installation
 
 1. **Clone the repository:**
+
    ```bash
-   git clone git@github.com:cellamo/EksiLiveFeed.git
+   git clone https://github.com/cellamo/EksiLiveFeed.git
+   ```
+
+2. **Navigate to the project directory:**
+
+   ```bash
    cd EksiLiveFeed
    ```
 
-2. **Set up a virtual environment (optional but recommended):**
+3. **Create a virtual environment** *(optional but recommended):*
+
    ```bash
    python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
    ```
 
-3. **Install dependencies from `requirements.txt`:**
+    3.1 **Activate the virtual environment:**
+      - On **Windows:**
+
+        ```bash
+        venv\Scripts\activate
+        ```
+
+      - On **macOS** and **Linux:**
+
+        ```bash
+        source venv/bin/activate
+        ```
+
+4. **Install required packages:**
+
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Run the application:**
+## Usage
+
+1. **Run the application:**
+
    ```bash
-   python app.py
+   python api/index.py
    ```
 
-#### Usage
+   The server will start on `http://0.0.0.0:8000`.
 
-- **Access the application:**
-  Open a web browser and navigate to `http://127.0.0.1:5000/`.
+2. **Access the application:**
+   Open your web browser and navigate to `http://localhost:8000`.
 
-- **Using the interface:**
-  - Enter a topic title in the input field. (26 nisan 2024 real sociedad real madrid maçı)
-  - Click the `Submit` button to fetch the latest entries.
-  - Entries will be displayed in a list; newer entries appear at the top.
-  - Click the `Toggle Dark Mode` button to switch between light and dark themes.
+3. **Explore Trending Topics**:
+   - The sidebar displays the current trending topics (Gündem Başlıkları) from Ekşi Sözlük.
+   - Click on any topic to see the live feed of entries related to that topic.
 
-- **Automatic refresh:**
-  After the initial fetch, the application will automatically refresh the entries every 3 seconds.
+4. **Search for a Topic**:
+   - Use the input field at the top to enter a topic title.
+   - Click on **Submit** to start fetching live entries for the entered topic.
 
-#### Files and Directories
+5. **Toggle Dark Mode**:
+   - Click on the **"Toggle Dark Mode"** button to switch between light and dark themes.
 
-- `app.py`: The main Python file containing Flask routes and logic for fetching Eksi Sozluk entries.
-- `templates/`: Directory containing HTML files for the web interface.
-- `index.html`: The HTML template for the application's front end.
+## Project Structure
 
-#### Features
+- `api/index.py`: The main Flask application that handles routes and server logic.
+- `api/templates/index.html`: The HTML template for rendering the web page.
 
-- Fetch and display entries from Eksi Sozluk based on user-specified topics.
-- Entries are sorted by date in descending order.
-- Automatic refreshing of entries every 3 seconds after the first fetch.
-- Dark mode toggle for enhanced user experience.
+## Notes
 
-#### Contributing
+- **Ekşi Sözlük Integration**: The application fetches data from Ekşi Sözlük using the **`eksipy`** library.
+- **Updated Selectors**: Due to potential changes in the Ekşi Sözlük website structure, the **`UpdatedEksi`** class in **`index.py`** includes updated selectors to ensure data is fetched correctly.
+- **Logging**: The application uses Python's logging module for error tracking and debugging.
 
-Contributions to this project are welcome. Please fork the repository, make your changes, and submit a pull request.
+## Troubleshooting
 
-#### License
+- **Fetching Errors**: If you encounter errors related to fetching topics or entries, it might be due to changes in the Ekşi Sözlük website structure or connectivity issues.
+- **Error Messages**: Check the console output for any error logs to identify and resolve issues.
+- **Dependencies**: Ensure all dependencies are installed correctly and are up to date.
 
-This project is licensed under the MIT License. See the LICENSE file for more details.
+## Disclaimer
+
+This application uses the `eksipy` library to retrieve data from Ekşi Sözlük. I do not employ any scraping techniques or have any affiliation with Ekşi Sözlük. This is an independent project created for personal use only. I created this to read entries on topics during Galatasaray matches.
+
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+Feel free to contribute to this project by submitting issues or pull requests.
