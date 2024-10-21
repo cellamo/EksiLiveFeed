@@ -139,7 +139,7 @@ def get_entries(topic_title):
                 {
                     'text': entry.text(),
                     'author': entry.author.nick,
-                    'date': time_ago(datetime.fromtimestamp(entry.date, timezone.utc)) if entry.date else 'Unknown'
+                    'timestamp': datetime.fromtimestamp(entry.date, timezone.utc).isoformat() if entry.date else None
                 }
                 for entry in sorted_entries
             ]
