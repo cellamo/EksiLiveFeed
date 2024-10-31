@@ -62,11 +62,11 @@ logger = logging.getLogger(__name__)
 cache_logger = logging.getLogger('cache_metrics')
 cache_logger.setLevel(logging.INFO)
 
-os.makedirs('logs', exist_ok=True)
+# os.makedirs('logs', exist_ok=True)
 
-cache_handler = logging.FileHandler('logs/cache_metrics.log')
-cache_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
-cache_logger.addHandler(cache_handler)
+# cache_handler = logging.FileHandler('logs/cache_metrics.log')
+# cache_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+# cache_logger.addHandler(cache_handler)
 
 def time_ago(date):
     now = datetime.now(timezone.utc)
