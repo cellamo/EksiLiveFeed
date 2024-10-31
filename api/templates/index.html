@@ -329,7 +329,8 @@ $(document).ready(function() {
             clearInterval(window.fetchInterval);
         }
         fetchEntries();
-        window.fetchInterval = setInterval(fetchEntries, 3000);
+        // Optionally, fetch entries periodically only when needed
+        // window.fetchInterval = setInterval(fetchEntries, 3000);
     });
 
     function timeAgo(time) {
@@ -376,20 +377,7 @@ $(document).ready(function() {
     });
 
 
-            function toggleDarkMode() {
-            $('body').toggleClass('dark-mode');
-            $('.navbar, .footer').toggleClass('navbar-light bg-light navbar-dark bg-dark');
-            if ($('body').hasClass('dark-mode')) {
-                $('.fa-sun').removeClass('fa-sun').addClass('fa-moon').css('color', '#81c14b');
-            } else {
-                $('.fa-moon').removeClass('fa-moon').addClass('fa-sun').css('color', '#81c14b');
-            }
-        }
-
-        $('#dark-mode-toggle, #dark-mode-toggle-mobile').click(function(e) {
-            e.preventDefault();
-            toggleDarkMode();
-        });
+            
 
             $('.gundem-topic').click(function() {
                 var topicTitle = $(this).text();
@@ -434,6 +422,37 @@ $(document).ready(function() {
                 $('.content').css('margin-left', '0');
             }
         }).resize(); // Trigger on page load
+
+        $(document).ready(function() {
+    function enableDarkMode() {
+        $('body').addClass('dark-mode');
+        $('.navbar, .footer').addClass('navbar-dark bg-dark').removeClass('navbar-light bg-light');
+        $('#theme-icon, #theme-icon-mobile').removeClass('fa-sun').addClass('fa-moon').css('color', '#81c14b');
+        localStorage.setItem('dark-mode', 'enabled');
+    }
+
+    function disableDarkMode() {
+        $('body').removeClass('dark-mode');
+        $('.navbar, .footer').removeClass('navbar-dark bg-dark').addClass('navbar-light bg-light');
+        $('#theme-icon, #theme-icon-mobile').removeClass('fa-moon').addClass('fa-sun').css('color', '#81c14b');
+        localStorage.setItem('dark-mode', 'disabled');
+    }
+
+    // Initial state check
+    if (localStorage.getItem('dark-mode') === 'enabled') {
+        enableDarkMode();
+    }
+
+    // Toggle dark mode
+    $('#dark-mode-toggle, #dark-mode-toggle-mobile').on('click', function(e) {
+        e.preventDefault();
+        if ($('body').hasClass('dark-mode')) {
+            disableDarkMode();
+        } else {
+            enableDarkMode();
+        }
+    });
+});
     });
     </script>
 </body>
