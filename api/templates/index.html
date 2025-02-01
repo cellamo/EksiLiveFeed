@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/png" href="/static/icon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eksi Sozluk Live Feed</title>
@@ -164,6 +165,14 @@
             margin-left: 0 !important;
         }
     }
+
+    small.text-muted {
+        font-style: italic;
+    }
+    
+    .dark-mode small.text-muted {
+        color: #aaa !important;
+    }
     </style>
 </head>
 <body>
@@ -216,8 +225,8 @@
         <div class="container mt-5">
             <hr>
             <div class="disclaimer text-muted small">
-                <p>Disclaimer: This application uses the `eksipy` library to retrieve data from Ekşi Sözlük. I do not employ any scraping techniques or have any affiliation with Ekşi Sözlük. This is an independent project created for personal use only. I created this to read entries on topics during Galatasaray matches.</p>
-            </div>
+                <p>Disclaimer: This application uses the <a href="https://github.com/yusufusta/eksipy" target="_blank" rel="noopener noreferrer">eksipy library</a> to retrieve data from Ekşi Sözlük. I do not employ any scraping techniques or have any affiliation with Ekşi Sözlük. This is an independent project created for personal use only. I created this to read entries on topics during Galatasaray matches.</p>
+            </div>            
         </div>
     </div>
     <footer class="footer mt-auto py-3 bg-light">
@@ -234,8 +243,7 @@
 
 function timeAgo(time) {
     var now = new Date();
-    var seconds = Math.floor((now - time) / 1000);
-
+    var seconds = Math.floor((now.getTime() - time.getTime()) / 1000);
     if (seconds < 60) {
         return seconds + ' seconds ago';
     } else if (seconds < 3600) {
@@ -251,64 +259,69 @@ function fetchEntries(topicTitle) {
     if (!topicTitle) {
         topicTitle = $('#topic-title').val();
     }
-    $.get('/get_entries', { topic_title: topicTitle }, function(data) {
-        if (data.error) {
-            $('#error-message').text(data.error).show();
-            $('#entry-list').empty();
-            currentEntries = [];
-            return;
-        } else {
-            $('#error-message').hide();
-        }
-
-        var entryList = $('#entry-list');
-        var entries = data.entries.slice(0, 20);
-
-        // Map entries to have date as Date object
-        entries.forEach(entry => {
-            if (entry.timestamp) {
-                entry.dateObj = new Date(entry.timestamp);
+    $.ajax({
+        url: '/get_entries',
+        data: { topic_title: topicTitle },
+        cache: false,
+        success: function(data) {
+            if (data.error) {
+                $('#error-message').text(data.error).show();
+                $('#entry-list').empty();
+                currentEntries = [];
+                return;
             } else {
-                entry.dateObj = null;
+                $('#error-message').hide();
             }
-        });
 
-        // Check for new or updated entries
-        var hasChanges = false;
-        if (currentEntries.length !== entries.length) {
-            hasChanges = true;
-        } else {
-            for (var i = 0; i < entries.length; i++) {
-                if (entries[i].text !== currentEntries[i].text) {
-                    hasChanges = true;
-                    break;
+            var entryList = $('#entry-list');
+            var entries = data.entries.slice(0, 20);
+
+            // Map entries to have date as Date object
+            entries.forEach(entry => {
+                if (entry.timestamp) {
+                    entry.dateObj = new Date(entry.timestamp);
+                } else {
+                    entry.dateObj = null;
+                }
+            });
+
+            // Check for new or updated entries
+            var hasChanges = false;
+            if (currentEntries.length !== entries.length) {
+                hasChanges = true;
+            } else {
+                for (var i = 0; i < entries.length; i++) {
+                    if (entries[i].text !== currentEntries[i].text) {
+                        hasChanges = true;
+                        break;
+                    }
                 }
             }
-        }
 
-        if (hasChanges) {
-            // Re-render the entire list
-            entryList.empty();
-            entries.forEach(function(entry) {
-                var listItem = $('<li class="list-group-item fade-in">' +
-                    '<p>' + entry.text + '</p>' +
-                    '<div class="text-right">' +
-                    '<small class="text-muted">' + entry.author + ' | ' + timeAgo(entry.dateObj) + '</small>' +
-                    '</div>' +
-                    '</li>');
-                entryList.append(listItem);
-                setTimeout(() => listItem.removeClass('fade-in'), 500);
-            });
-            currentEntries = entries;
-        } else {
-            // Update the timestamps
-            entryList.children('li').each(function(index) {
-                var entry = entries[index];
-                var dateObj = entry.dateObj;
+            if (hasChanges) {
+                // Re-render the entire list
+                entryList.empty();
+                entries.forEach(function(entry) {
+                    var listItem = $('<li class="list-group-item fade-in">' +
+                        '<p>' + entry.text + '</p>' +
+                        '<div class="text-right">' +
+                        '<small class="text-muted">' + entry.author + ' | ' + timeAgo(entry.dateObj) + '</small>' +
+                        '</div>' +
+                        '</li>');
+                    entryList.append(listItem);
+                    setTimeout(() => listItem.removeClass('fade-in'), 500);
+                });
+                currentEntries = entries;
+            } else {
+                // Update the timestamps
+                entryList.children('li').each(function(index) {
+                    var entry = entries[index];
+                    var dateObj = entry.dateObj;
 
-                var timeAgoStr = timeAgo(dateObj);
-                $(this).find('.text-muted').text(entry.author + ' | ' + timeAgoStr);
-            });
+                    var timeAgoStr = timeAgo(dateObj);
+                    $(this).find('.text-muted').text(entry.author + ' | ' + timeAgoStr);
+                });
+            }
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         let errorMessage = 'An error occurred.';
@@ -322,20 +335,24 @@ function fetchEntries(topicTitle) {
         currentEntries = [];
     });
 }
-
 $(document).ready(function() {
     $('#submit-btn').click(function() {
         if (window.fetchInterval) {
             clearInterval(window.fetchInterval);
         }
         fetchEntries();
-        // Optionally, fetch entries periodically only when needed
-        // window.fetchInterval = setInterval(fetchEntries, 3000);
+        // Start periodic refresh after manual submission
+        window.fetchInterval = setInterval(fetchEntries, 3000);
     });
 
     function timeAgo(time) {
         var now = new Date();
-        var seconds = Math.floor((now - time) / 1000);
+        var utcNow = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),
+                              now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+        var utcTime = time.getTime();
+        var seconds = Math.floor((utcNow - utcTime) / 1000);
+        
+        if (seconds < 0) return 'just now';
 
         if (seconds < 60) {
             return seconds + ' seconds ago';

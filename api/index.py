@@ -181,7 +181,6 @@ def get_gundem(page=1):
     logger.info("Successfully fetched gundem_topics.")
     return topics
 
-@cache_metrics
 def get_entries(topic_title):
     logger.info(f"Fetching entries for topic: {topic_title}")
     loop = asyncio.new_event_loop()
