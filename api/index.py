@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import hashlib
 from flask import Flask, render_template, request, jsonify
 import asyncio
@@ -12,7 +12,6 @@ import time
 from functools import wraps
 import psutil
 import os
-from datetime import datetime
 
 app = Flask(__name__)
 
@@ -22,7 +21,6 @@ app.config['CACHE_DEFAULT_TIMEOUT'] = 300  # 5 minutes
 app.config['CACHE_DEFAULT_TIMEOUT'] = 300  # 5 minutes
 cache = Cache(app)
 
-TR_TZ = timezone(timedelta(hours=3))
 
 # Initialize cache metrics
 cache_hits = 0
@@ -199,7 +197,7 @@ def get_entries(topic_title):
                 {
                     'text': entry.text(),
                     'author': entry.author.nick,
-                    'timestamp': datetime.fromtimestamp(entry.date, TR_TZ).isoformat() if entry.date else None
+                    'timestamp': datetime.fromtimestamp(entry.date, timezone.utc).isoformat().replace('+00:00', 'Z') if entry.date else None
                 }
                 for entry in sorted_entries
             ]
